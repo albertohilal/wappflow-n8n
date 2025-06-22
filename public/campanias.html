@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de Campañas</title>
+</head>
+<body>
+  <h1>Campañas Guardadas</h1>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nombre</th>
+        <th>Mensaje</th>
+        <th>Fecha de creación</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-campanias">
+      <!-- Se llenará por JavaScript -->
+    </tbody>
+  </table>
+
+  <script>
+    async function cargarCampanias() {
+      const res = await fetch('/api/campanias/listado');
+      const data = await res.json();
+
+      const cuerpo = document.getElementById('tabla-campanias');
+      cuerpo.innerHTML = '';
+
+      data.forEach(campania => {
+        const fila = `
+          <tr>
+            <td>${campania.id}</td>
+            <td>${campania.nombre}</td>
+            <td>${campania.mensaje}</td>
+            <td>${new Date(campania.fecha_creacion).toLocaleString()}</td>
+          </tr>
+        `;
+        cuerpo.innerHTML += fila;
+      });
+    }
+
+    cargarCampanias();
+  </script>
+</body>
+</html>

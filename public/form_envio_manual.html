@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Nuevo envío manual</title>
+</head>
+<body>
+  <h1>Cargar envío manual</h1>
+  <form id="envioManualForm">
+    <label>ID de Campaña:</label><br>
+    <input type="number" id="campania_id" required><br><br>
+
+    <label>Nombre del destinatario:</label><br>
+    <input type="text" id="nombre_destino" required><br><br>
+
+    <label>Teléfono:</label><br>
+    <input type="text" id="telefono" required><br><br>
+
+    <label>Mensaje:</label><br>
+    <textarea id="mensaje_final" rows="4" cols="50" required></textarea><br><br>
+
+    <button type="submit">Guardar envío</button>
+  </form>
+
+  <p id="respuesta"></p>
+
+  <script>
+    document.getElementById('envioManualForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const data = {
+        campania_id: document.getElementById('campania_id').value,
+        nombre_destino: document.getElementById('nombre_destino').value,
+        telefono: document.getElementById('telefono').value,
+        mensaje_final: document.getElementById('mensaje_final').value
+      };
+
+      const res = await fetch('/api/envios/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      const salida = document.getElementById('respuesta');
+      if (json.success) {
+        salida.innerText = `✅ Envío guardado con ID ${json.insertId}`;
+      } else {
+        salida.innerText = `❌ Error: ${json.error || 'Error al guardar'}`;
+      }
+    });
+  </script>
+</body>
+</html>

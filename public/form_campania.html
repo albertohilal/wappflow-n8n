@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Campaña</title>
+</head>
+<body>
+  <h1>Formulario de Nueva Campaña</h1>
+  <form id="campaniaForm">
+    <label for="nombre">Nombre de la campaña:</label><br>
+    <input type="text" id="nombre" name="nombre" required><br><br>
+
+    <label for="mensaje">Mensaje:</label><br>
+    <textarea id="mensaje" name="mensaje" rows="4" cols="50" required></textarea><br><br>
+
+    <button type="submit">Guardar campaña</button>
+  </form>
+
+  <p id="respuesta"></p>
+
+  <script>
+    document.getElementById('campaniaForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      
+      const nombre = document.getElementById('nombre').value;
+      const mensaje = document.getElementById('mensaje').value;
+
+      const respuesta = await fetch('/api/campanias/campania', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre, mensaje })
+      });
+
+      const data = await respuesta.json();
+      const salida = document.getElementById('respuesta');
+
+      if (data.success) {
+        salida.innerText = `✅ Campaña guardada con ID ${data.insertId}`;
+        document.getElementById('campaniaForm').reset();
+      } else {
+        salida.innerText = `❌ Error: ${data.error || 'No se pudo guardar'}`;
+      }
+    });
+  </script>
+</body>
+</html>
