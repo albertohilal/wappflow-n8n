@@ -1,3 +1,7 @@
-# .gitignore
-.env
+# Autenticación WhatsApp Web
+.wwebjs_auth/
+.wwebjs_cache/
+scripts/.wwebjs_cache/
 node_modules/
+
+

@@ -6,22 +6,19 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3010;
 
-const enviosRoutes = require('./routes/envios');
-app.use('/api/envios', enviosRoutes);
-
-
-// Middlewares
+// ✅ Middlewares (deben ir antes de las rutas)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta API
-app.use('/api/campanias', require('./routes/campanias'));
+// ✅ Rutas API
+const enviosRoutes = require('./routes/envios');
+app.use('/api/envios', enviosRoutes);
 
+const campaniasRoutes = require('./routes/campanias');
+app.use('/api/campanias', campaniasRoutes);
 
-
-// Iniciar servidor
+// ✅ Iniciar servidor
 app.listen(PORT, () => {
   console.log(`✅ Servidor wappflow-n8n escuchando en http://localhost:${PORT}`);
 });
-

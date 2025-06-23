@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Listado de envíos</title>
+</head>
+<body>
+  <h1>Envíos guardados</h1>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Campaña</th>
+        <th>Nombre</th>
+        <th>Teléfono</th>
+        <th>Mensaje final</th>
+        <th>Estado</th>
+        <th>Fecha de envío</th>
+      </tr>
+    </thead>
+    <tbody id="tabla-envios"></tbody>
+  </table>
+
+  <script>
+    async function cargarEnvios() {
+      const res = await fetch('/api/envios/listado');
+      const data = await res.json();
+
+      const cuerpo = document.getElementById('tabla-envios');
+      cuerpo.innerHTML = '';
+
+      data.forEach(envio => {
+        const fila = `
+          <tr>
+            <td>${envio.id}</td>
+            <td>${envio.campania_id}</td>
+            <td>${envio.nombre_destino}</td>
+            <td>${envio.telefono}</td>
+            <td>${envio.mensaje_final}</td>
+            <td>${envio.estado}</td>
+            <td>${envio.fecha_envio ? new Date(envio.fecha_envio).toLocaleString() : '-'}</td>
+          </tr>
+        `;
+        cuerpo.innerHTML += fila;
+      });
+    }
+
+    cargarEnvios();
+  </script>
+</body>
+</html>
