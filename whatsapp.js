@@ -1,5 +1,6 @@
 // whatsapp.js
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal'); // 👈 IMPORTANTE
 
 const client = new Client({
   authStrategy: new LocalAuth({
@@ -13,7 +14,7 @@ const client = new Client({
 
 client.on('qr', (qr) => {
   console.log("📲 Escaneá este QR para iniciar sesión:");
-  console.log(qr);
+  qrcode.generate(qr, { small: true }); // 👈 QR legible en consola
 });
 
 client.on('ready', () => {
