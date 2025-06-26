@@ -18,10 +18,12 @@ async function generarEnvios(campaniaId = 1) {
     const campania = campanias[0];
     console.log(`✅ Usando campaña: ${campania.nombre}`);
 
-    // 2. Traer solo algunos números específicos para prueba
+    // 2. Traer lugares con nombre del rubro (nombre_es)
     const [lugares] = await db.execute(`
-      SELECT nombre, rubro, telefono FROM ll_lugares
-      WHERE telefono IN ('5491163083302', '5491158254201')
+      SELECT l.nombre, l.telefono, r.nombre_es AS rubro
+      FROM ll_lugares l
+      LEFT JOIN ll_rubros r ON l.rubro_id = r.id
+      WHERE l.telefono IN ('5491163083302', '5491158254201')
     `);
 
     if (lugares.length === 0) {
@@ -34,7 +36,7 @@ async function generarEnvios(campaniaId = 1) {
     for (const lugar of lugares) {
       const mensajeFinal = campania.mensaje
         .replace('{{nombre}}', lugar.nombre)
-        .replace('{{rubro}}', lugar.rubro);
+        .replace('{{rubro}}', lugar.rubro || 'rubro no especificado');
 
       await db.execute(
         'INSERT INTO ll_envios_whatsapp (campania_id, telefono, nombre_destino, mensaje_final, estado) VALUES (?, ?, ?, ?, ?)',
@@ -52,6 +54,5 @@ async function generarEnvios(campaniaId = 1) {
   }
 }
 
-// Ejecutar desde terminal: node scripts/generar_envios.js 1
 const campaniaId = process.argv[2] || 1;
 generarEnvios(campaniaId);
