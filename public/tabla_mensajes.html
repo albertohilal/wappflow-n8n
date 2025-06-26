@@ -7,6 +7,29 @@
 </head>
 <body class="p-4">
   <h2>Últimos envíos de WhatsApp</h2>
+
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <label for="filtroCampania" class="form-label">Campaña</label>
+      <select id="filtroCampania" class="form-select">
+        <option value="">Todas</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label for="filtroEstado" class="form-label">Estado</label>
+      <select id="filtroEstado" class="form-select">
+        <option value="">Todos</option>
+        <option value="enviado">Enviado</option>
+        <option value="pendiente">Pendiente</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button class="btn btn-primary w-100" onclick="cargarMensajes(1)">Filtrar</button>
+    </div>
+  </div>
+
+  <div id="alerta" class="alert d-none"></div>
+
   <table class="table table-bordered" id="tablaMensajes">
     <thead>
       <tr>
@@ -16,18 +39,54 @@
         <th>Mensaje</th>
         <th>Estado</th>
         <th>Fecha</th>
+        <th>Acción</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
+  <div class="d-flex justify-content-between align-items-center">
+    <button class="btn btn-outline-secondary" id="btnAnterior" onclick="paginaAnterior()" disabled>Anterior</button>
+    <span id="infoPaginacion" class="fw-bold"></span>
+    <button class="btn btn-outline-secondary" id="btnSiguiente" onclick="paginaSiguiente()" disabled>Siguiente</button>
+  </div>
+
   <script>
-    async function cargarMensajes() {
-      const res = await fetch("/api/mensajes");
-      const mensajes = await res.json();
+    let paginaActual = 1;
+    let totalPaginas = 1;
+    const porPagina = 10;
+
+    async function cargarCampanias() {
+      const res = await fetch("/api/campanias");
+      const campanias = await res.json();
+      const select = document.getElementById("filtroCampania");
+      campanias.forEach((c) => {
+        const opt = document.createElement("option");
+        opt.value = c.id;
+        opt.textContent = c.nombre;
+        select.appendChild(opt);
+      });
+    }
+
+    async function cargarMensajes(pagina = 1) {
+      paginaActual = pagina;
+      const campania = document.getElementById("filtroCampania").value;
+      const estado = document.getElementById("filtroEstado").value;
+
+      const params = new URLSearchParams({
+        page: paginaActual,
+        limit: porPagina,
+      });
+      if (campania) params.append("campania", campania);
+      if (estado) params.append("estado", estado);
+
+      const res = await fetch(`/api/mensajes?${params.toString()}`);
+      const data = await res.json();
+
       const tbody = document.querySelector("#tablaMensajes tbody");
       tbody.innerHTML = "";
-      mensajes.forEach((msg) => {
+
+      data.mensajes.forEach((msg) => {
         const fila = `<tr>
           <td>${msg.id}</td>
           <td>${msg.telefono}</td>
@@ -35,11 +94,50 @@
           <td>${msg.mensaje_final}</td>
           <td>${msg.estado}</td>
           <td>${msg.fecha_envio || ''}</td>
+          <td>
+            <button class="btn btn-sm btn-success" onclick="reenviarMensaje(${msg.id})">📤 Reenviar</button>
+          </td>
         </tr>`;
         tbody.innerHTML += fila;
       });
+
+      totalPaginas = Math.ceil(data.total / porPagina);
+      document.getElementById("infoPaginacion").innerText = `Página ${paginaActual} de ${totalPaginas}`;
+      document.getElementById("btnAnterior").disabled = paginaActual <= 1;
+      document.getElementById("btnSiguiente").disabled = paginaActual >= totalPaginas;
     }
 
+    async function reenviarMensaje(id) {
+      const alerta = document.getElementById("alerta");
+      alerta.className = "alert alert-info";
+      alerta.textContent = "Reenviando mensaje...";
+      alerta.classList.remove("d-none");
+
+      try {
+        const res = await fetch(`/api/reenviar/${id}`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        alerta.className = "alert alert-success";
+        alerta.textContent = data.mensaje || "Mensaje reenviado.";
+      } catch (err) {
+        alerta.className = "alert alert-danger";
+        alerta.textContent = "Error al reenviar el mensaje.";
+        console.error(err);
+      }
+
+      setTimeout(() => alerta.classList.add("d-none"), 4000);
+    }
+
+    function paginaAnterior() {
+      if (paginaActual > 1) cargarMensajes(paginaActual - 1);
+    }
+
+    function paginaSiguiente() {
+      if (paginaActual < totalPaginas) cargarMensajes(paginaActual + 1);
+    }
+
+    cargarCampanias();
     cargarMensajes();
   </script>
 </body>
