@@ -1,22 +1,25 @@
-# Entornos y configuraciones
+# 🛠️ Entornos y configuraciones
 .env
 *.env
 
-# Node
+# 📦 Node
 node_modules/
 
-# Directorios temporales
-.webjs_auth/
-.webjs_cache/
+# 🧹 Directorios temporales
+.wwebjs_auth/
+.wwebjs_cache/
+scripts/.wwebjs_auth/
+scripts/.wwebjs_cache/
+scripts/session/
 
-# Archivos del sistema
+# 💻 Archivos del sistema
 .DS_Store
 Thumbs.db
 
-# Logs
+# 🧾 Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# VSCode
+# 🧠 VSCode
 .vscode/
