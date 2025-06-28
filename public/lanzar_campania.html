@@ -2,14 +2,111 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Generar envíos por campaña</title>
+  <title>Lanzar Campaña de WhatsApp</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    label, select, input, button {
+      display: block;
+      margin: 10px 0;
+    }
+  </style>
 </head>
 <body>
-  <h1>Generar envíos</h1>
-  <form action="/generar" method="POST">
-    <label for="campaniaId">ID de Campaña:</label>
-    <input type="number" id="campaniaId" name="campaniaId" required>
-    <button type="submit">Generar envíos</button>
-  </form>
+  <h1>Lanzar Campaña de WhatsApp</h1>
+
+  <label for="campania">Seleccionar campaña:</label>
+  <select id="campania"></select>
+
+  <label for="rubro">Seleccionar rubro:</label>
+  <select id="rubro"></select>
+
+  <label for="cantidad">Cantidad de registros:</label>
+  <input type="number" id="cantidad" min="1" value="5">
+
+  <button id="generar">Generar envíos</button>
+
+  <script>
+    async function cargarCampanias() {
+      try {
+        const res = await fetch('/api/campanias');
+        const data = await res.json();
+        const select = document.getElementById('campania');
+        data.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.nombre;
+          select.appendChild(opt);
+        });
+      } catch (error) {
+        console.error('Error al cargar campañas:', error);
+        alert('Error al cargar campañas');
+      }
+    }
+
+    async function cargarRubros() {
+      try {
+        const res = await fetch('/api/rubros');
+        const data = await res.json();
+        const select = document.getElementById('rubro');
+        data.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r.id;
+          opt.textContent = r.nombre;
+          select.appendChild(opt);
+        });
+      } catch (error) {
+        console.error('Error al cargar rubros:', error);
+        alert('Error al cargar rubros');
+      }
+    }
+
+    async function lanzarCampania() {
+      const campaniaId = document.getElementById('campania').value;
+      const rubroId = document.getElementById('rubro').value;
+      const cantidad = document.getElementById('cantidad').value;
+
+      if (!campaniaId || !rubroId || !cantidad) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/lanzar-campania', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            campaniaId: parseInt(campaniaId),
+            rubroId: parseInt(rubroId),
+            cantidad: parseInt(cantidad)
+          })
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Respuesta no OK:', errorText);
+          throw new Error(errorText || 'Error desconocido');
+        }
+
+        const resultado = await res.json();
+        console.log('Respuesta del servidor:', resultado);
+        alert('Campaña enviada correctamente.');
+
+      } catch (error) {
+        console.error('Error al lanzar campaña:', error);
+        alert('Hubo un error al enviar la campaña.');
+      }
+    }
+
+    document.getElementById('generar').addEventListener('click', lanzarCampania);
+
+    // Cargar listas al iniciar
+    cargarCampanias();
+    cargarRubros();
+  </script>
 </body>
 </html>
