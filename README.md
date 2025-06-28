@@ -1,99 +1,77 @@
+Excelente. A continuación te doy el contenido actualizado del `README.md` incluyendo la nueva funcionalidad del formulario `lanzar_campania.html`:
 
-# WappFlow-n8n
+---
 
-Envío automatizado de mensajes por WhatsApp mediante `whatsapp-web.js`, con integración a base de datos MySQL y control mediante scripts Node.js. Desarrollado como parte del ecosistema de automatización con n8n.
+```markdown
+# wappflow-n8n
 
-## 🚀 Funcionalidad
+Este proyecto permite gestionar campañas automatizadas de WhatsApp usando Node.js y MySQL, con posibilidad de extender flujos mediante n8n.
 
-- Escanea un código QR para iniciar sesión en WhatsApp Web.
-- Extrae destinatarios desde una tabla MySQL (`ll_envios_whatsapp`).
-- Envía mensajes personalizados a cada número.
-- Actualiza el estado del envío en la base de datos (`enviado`, `error`).
-- Scripts separados para envío y generación de campañas.
-- Preparado para integrarse a workflows de `n8n`.
-
-## 📦 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 
-wappflow-n8n/
+├── index.js                # Servidor principal Express
+├── lanzar\_campania.html   # Formulario web para lanzar campañas
 ├── scripts/
-│   ├── enviar\_mensajes.js      # Script principal para envío
-│   └── generar\_envios.js       # (Opcional) Generador de campañas
-├── routes/
-│   └── envios.js               # (Opcional) Rutas API para dashboard u otro cliente
+│   ├── generar.js          # Genera los registros para envío
+│   ├── campanias.js        # Consulta campañas disponibles
+│   └── envios.js           # Inserta los envíos a la base de datos
 ├── public/
-│   └── envios.html             # Interfaz web (en construcción)
-├── .env                        # Variables de entorno (no versionado)
-├── .gitignore
-├── package.json
-└── README.md
+│   └── ...                 # Archivos estáticos servidos
+└── .env                    # Variables de entorno (no versionado)
 
 ````
 
-## 🛠️ Requisitos
+## Base de datos
 
-- Node.js 18+ recomendado.
-- MySQL/MariaDB activo.
-- Un navegador instalado (usa Puppeteer/Chromium).
-- Cuenta de WhatsApp válida.
+Se usa MySQL con las siguientes tablas principales:
 
-## ⚙️ Configuración
+- `ll_campanias_whatsapp`: campañas creadas manualmente.
+- `ll_envios_whatsapp`: envíos programados o realizados.
 
-1. **Instalar dependencias**:
+## Lanzar campaña desde formulario web
+
+Archivo: `lanzar_campania.html`
+
+Permite seleccionar una campaña, un rubro y la cantidad de destinatarios a incluir en una nueva tanda de envíos.
+
+Pasos del flujo:
+
+1. El usuario selecciona los datos desde el formulario.
+2. Se realiza una petición POST a `/api/lanzar-campania`.
+3. El servidor ejecuta `generar.js` que:
+   - Filtra los destinatarios según campaña y rubro.
+   - Genera el mensaje automático.
+   - Inserta en la tabla `ll_envios_whatsapp` con estado `pendiente`.
+
+## Ejecución local
+
+1. Instalar dependencias:
 
    ```bash
    npm install
 ````
 
-2. **Crear archivo `.env`** con el siguiente formato:
+2. Crear archivo `.env` con las credenciales MySQL:
 
-   ```ini
+   ```
    DB_HOST=localhost
    DB_USER=tu_usuario
-   DB_PASSWORD=tu_password
-   DB_NAME=nombre_base
+   DB_PASSWORD=tu_contraseña
+   DB_DATABASE=iunaorg_dyd
    DB_PORT=3306
    ```
 
-3. **Ejecutar el script de envío**:
+3. Correr el servidor:
 
    ```bash
-   node scripts/enviar_mensajes.js
+   node index.js
    ```
 
-   Al iniciarse, se abrirá el navegador con el código QR. Escanealo con tu celular.
+4. Abrir el formulario en el navegador:
 
-## 📄 Estructura de la tabla `ll_envios_whatsapp`
+   ```
+   http://localhost:3010/lanzar_campania.html
+   ```
 
-```sql
-CREATE TABLE ll_envios_whatsapp (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  campania_id INT,
-  telefono VARCHAR(20),
-  nombre_destinatario VARCHAR(100),
-  mensaje_final TEXT,
-  estado VARCHAR(20),
-  fecha_envio DATETIME
-);
-```
-
-## 📌 Consideraciones
-
-* Este sistema usa `whatsapp-web.js`, que simula WhatsApp Web. Puede requerir escaneo frecuente del QR si no se conserva la sesión.
-* No se recomienda para envío masivo comercial sin consentimiento (puede infringir Términos de Servicio de WhatsApp).
-* Se puede integrar con `n8n` como módulo de envío por WhatsApp.
-
-## 🧪 Estado del proyecto
-
-✔️ Envío funcional verificado
-✔️ Guardado de estado enviado / error
-🔜 Panel de control web
-🔜 Integración con n8n
-
-## 📬 Contacto
-
-Proyecto desarrollado por [albertohilal](https://github.com/albertohilal)
-Consultas y soporte: [desarrolloydisenio.com.ar](https://desarrolloydisenio.com.ar)
-
-```
