@@ -2,8 +2,14 @@
 const db = require('../db/connection');
 require('dotenv').config();
 
-async function generarEnvios(campaniaId = 1) {
+async function generarEnvios(campaniaId, cantidad, rubroId) {
   try {
+    // Validación de parámetros
+    if (!campaniaId || !cantidad || !rubroId) {
+      console.error('❌ Uso: node generar_envios.js <campaniaId> <cantidad> <rubroId>');
+      process.exit(1);
+    }
+
     // 1. Traer la campaña
     const [campanias] = await db.execute(
       'SELECT * FROM ll_campanias_whatsapp WHERE id = ?',
@@ -18,16 +24,23 @@ async function generarEnvios(campaniaId = 1) {
     const campania = campanias[0];
     console.log(`✅ Usando campaña: ${campania.nombre}`);
 
-    // 2. Traer lugares con nombre del rubro (nombre_es)
+    // 2. Buscar lugares que aún no fueron usados en esta campaña
     const [lugares] = await db.execute(`
-      SELECT l.nombre, l.telefono, r.nombre_es AS rubro
+      SELECT l.nombre, l.telefono_wapp AS telefono, r.nombre_es AS rubro
       FROM ll_lugares l
       LEFT JOIN ll_rubros r ON l.rubro_id = r.id
-      WHERE l.telefono IN ('5491163083302', '5491158254201')
-    `);
+      WHERE l.rubro_id = ?
+        AND l.telefono_wapp IS NOT NULL
+        AND l.telefono_wapp != ''
+        AND NOT EXISTS (
+          SELECT 1 FROM ll_envios_whatsapp e
+          WHERE e.telefono = l.telefono_wapp AND e.campania_id = ?
+        )
+      LIMIT ?
+    `, [rubroId, campaniaId, cantidad]);
 
     if (lugares.length === 0) {
-      console.log('⚠️ No se encontraron coincidencias con los teléfonos especificados.');
+      console.log('⚠️ No se encontraron registros pendientes.');
       return;
     }
 
@@ -35,18 +48,20 @@ async function generarEnvios(campaniaId = 1) {
 
     for (const lugar of lugares) {
       const mensajeFinal = campania.mensaje
-        .replace('{{nombre}}', lugar.nombre)
-        .replace('{{rubro}}', lugar.rubro || 'rubro no especificado');
+        .replace('{{nombre}}', lugar.nombre || '')
+        .replace('{{rubro}}', lugar.rubro || 'rubro');
 
       await db.execute(
-        'INSERT INTO ll_envios_whatsapp (campania_id, telefono, nombre_destino, mensaje_final, estado) VALUES (?, ?, ?, ?, ?)',
+        `INSERT INTO ll_envios_whatsapp 
+          (campania_id, telefono, nombre_destino, mensaje_final, estado, fecha_envio)
+         VALUES (?, ?, ?, ?, ?, NOW())`,
         [campania.id, lugar.telefono, lugar.nombre, mensajeFinal, 'pendiente']
       );
 
       insertados++;
     }
 
-    console.log(`✅ ${insertados} mensajes generados y guardados en ll_envios_whatsapp.`);
+    console.log(`✅ ${insertados} mensajes generados para la campaña ${campaniaId}.`);
   } catch (error) {
     console.error('❌ Error generando envíos:', error);
   } finally {
@@ -54,5 +69,9 @@ async function generarEnvios(campaniaId = 1) {
   }
 }
 
-const campaniaId = process.argv[2] || 1;
-generarEnvios(campaniaId);
+// Leer parámetros desde consola
+const campaniaId = parseInt(process.argv[2], 10);
+const cantidad = parseInt(process.argv[3], 10);
+const rubroId = parseInt(process.argv[4], 10);
+
+generarEnvios(campaniaId, cantidad, rubroId);

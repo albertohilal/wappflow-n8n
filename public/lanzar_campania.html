@@ -12,6 +12,10 @@
       display: block;
       margin: 10px 0;
     }
+    #respuesta {
+      margin-top: 20px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -27,6 +31,8 @@
   <input type="number" id="cantidad" min="1" value="5">
 
   <button id="generar">Generar envíos</button>
+
+  <div id="respuesta"></div>
 
   <script>
     async function cargarCampanias() {
@@ -64,47 +70,40 @@
     }
 
     async function lanzarCampania() {
-      const campaniaId = document.getElementById('campania').value;
-      const rubroId = document.getElementById('rubro').value;
+      const campania_id = document.getElementById('campania').value;
+      const rubro_id = document.getElementById('rubro').value;
       const cantidad = document.getElementById('cantidad').value;
 
-      if (!campaniaId || !rubroId || !cantidad) {
+      if (!campania_id || !rubro_id || !cantidad) {
         alert('Por favor completa todos los campos.');
         return;
       }
 
       try {
-        const res = await fetch('/api/lanzar-campania', {
+        const res = await fetch('/api/ejecutar-envios', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            campaniaId: parseInt(campaniaId),
-            rubroId: parseInt(rubroId),
+            campania_id: parseInt(campania_id),
+            rubro_id: parseInt(rubro_id),
             cantidad: parseInt(cantidad)
           })
         });
 
-        if (!res.ok) {
-          const errorText = await res.text();
-          console.error('Respuesta no OK:', errorText);
-          throw new Error(errorText || 'Error desconocido');
-        }
-
         const resultado = await res.json();
         console.log('Respuesta del servidor:', resultado);
-        alert('Campaña enviada correctamente.');
+        document.getElementById('respuesta').textContent = resultado.mensaje || resultado.error;
 
       } catch (error) {
         console.error('Error al lanzar campaña:', error);
-        alert('Hubo un error al enviar la campaña.');
+        document.getElementById('respuesta').textContent = '❌ Error al ejecutar la campaña.';
       }
     }
 
     document.getElementById('generar').addEventListener('click', lanzarCampania);
 
-    // Cargar listas al iniciar
     cargarCampanias();
     cargarRubros();
   </script>
