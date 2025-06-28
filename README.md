@@ -1,3 +1,4 @@
+
 # WappFlow-n8n
 
 Envío automatizado de mensajes por WhatsApp mediante `whatsapp-web.js`, con integración a base de datos MySQL y control mediante scripts Node.js. Desarrollado como parte del ecosistema de automatización con n8n.
@@ -13,22 +14,22 @@ Envío automatizado de mensajes por WhatsApp mediante `whatsapp-web.js`, con int
 
 ## 📦 Estructura del proyecto
 
+```
+
 wappflow-n8n/
 ├── scripts/
-│ ├── enviar_mensajes.js # Script principal para envío
-│ └── generar_envios.js # (Opcional) Generador de campañas
+│   ├── enviar\_mensajes.js      # Script principal para envío
+│   └── generar\_envios.js       # (Opcional) Generador de campañas
 ├── routes/
-│ └── envios.js # (Opcional) Rutas API para dashboard u otro cliente
+│   └── envios.js               # (Opcional) Rutas API para dashboard u otro cliente
 ├── public/
-│ └── envios.html # Interfaz web (en construcción)
-├── .env # Variables de entorno (no versionado)
+│   └── envios.html             # Interfaz web (en construcción)
+├── .env                        # Variables de entorno (no versionado)
 ├── .gitignore
 ├── package.json
 └── README.md
 
-markdown
-Copiar
-Editar
+````
 
 ## 🛠️ Requisitos
 
@@ -40,30 +41,32 @@ Editar
 ## ⚙️ Configuración
 
 1. **Instalar dependencias**:
+
    ```bash
    npm install
-Crear archivo .env con el siguiente formato:
+````
 
-ini
-Copiar
-Editar
-DB_HOST=localhost
-DB_USER=tu_usuario
-DB_PASSWORD=tu_password
-DB_NAME=nombre_base
-DB_PORT=3306
-Ejecutar el script de envío:
+2. **Crear archivo `.env`** con el siguiente formato:
 
-bash
-Copiar
-Editar
-node scripts/enviar_mensajes.js
-Al iniciarse, se abrirá el navegador con el código QR. Escanealo con tu celular.
+   ```ini
+   DB_HOST=localhost
+   DB_USER=tu_usuario
+   DB_PASSWORD=tu_password
+   DB_NAME=nombre_base
+   DB_PORT=3306
+   ```
 
-📄 Estructura de la tabla ll_envios_whatsapp
-sql
-Copiar
-Editar
+3. **Ejecutar el script de envío**:
+
+   ```bash
+   node scripts/enviar_mensajes.js
+   ```
+
+   Al iniciarse, se abrirá el navegador con el código QR. Escanealo con tu celular.
+
+## 📄 Estructura de la tabla `ll_envios_whatsapp`
+
+```sql
 CREATE TABLE ll_envios_whatsapp (
   id INT AUTO_INCREMENT PRIMARY KEY,
   campania_id INT,
@@ -73,20 +76,24 @@ CREATE TABLE ll_envios_whatsapp (
   estado VARCHAR(20),
   fecha_envio DATETIME
 );
-📌 Consideraciones
-Este sistema usa whatsapp-web.js, que simula WhatsApp Web. Puede requerir escaneo frecuente del QR si no se conserva la sesión.
+```
 
-No se recomienda para envío masivo comercial sin consentimiento (puede infringir Términos de Servicio de WhatsApp).
+## 📌 Consideraciones
 
-Se puede integrar con n8n como módulo de envío por WhatsApp.
+* Este sistema usa `whatsapp-web.js`, que simula WhatsApp Web. Puede requerir escaneo frecuente del QR si no se conserva la sesión.
+* No se recomienda para envío masivo comercial sin consentimiento (puede infringir Términos de Servicio de WhatsApp).
+* Se puede integrar con `n8n` como módulo de envío por WhatsApp.
 
-🧪 Estado del proyecto
+## 🧪 Estado del proyecto
+
 ✔️ Envío funcional verificado
 ✔️ Guardado de estado enviado / error
 🔜 Panel de control web
 🔜 Integración con n8n
 
-📬 Contacto
-Proyecto desarrollado por albertohilal.
-Consultas y soporte: desarrolloydisenio.com.ar
+## 📬 Contacto
 
+Proyecto desarrollado por [albertohilal](https://github.com/albertohilal)
+Consultas y soporte: [desarrolloydisenio.com.ar](https://desarrolloydisenio.com.ar)
+
+```
