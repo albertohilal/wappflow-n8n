@@ -1,7 +1,9 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const mysql = require('mysql2/promise');
-require('dotenv').config({ path: __dirname + '/../.env' }); // Carga el .env correctamente
+require('dotenv').config({ path: __dirname + '/../.env' });
+
+const SIMULACION = true; // Cambiar a false para enviar realmente
 
 const client = new Client({
   authStrategy: new LocalAuth(),
@@ -23,41 +25,55 @@ client.on('ready', async () => {
     const db = await mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,   // Usa tu variable real
-      database: process.env.DB_DATABASE,   // Usa tu variable real
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
       port: process.env.DB_PORT
     });
 
+    // Solo tu número de prueba para evitar envíos no deseados
     const [rows] = await db.execute(
-      "SELECT * FROM ll_envios_whatsapp WHERE estado = 'pendiente' LIMIT 50"
+      "SELECT * FROM ll_envios_whatsapp WHERE estado = 'pendiente' AND telefono = '5491163083302' LIMIT 3"
     );
+
+    if (rows.length === 0) {
+      console.log('⚠️ No hay mensajes pendientes para prueba.');
+      await db.end();
+      setTimeout(() => process.exit(0), 3000);
+      return;
+    }
 
     for (const row of rows) {
       const numero = row.telefono;
       const mensaje = row.mensaje_final.replace('{{nombre}}', row.nombre_destinatario || '');
+      const chatId = `${numero}@c.us`;
 
-      try {
-        const chatId = `${numero}@c.us`;
-        console.log(`📤 Enviando mensaje a ${chatId}`);
-        await client.sendMessage(chatId, mensaje);
-
+      if (SIMULACION) {
+        console.log(`🟡 Simulación: se enviaría a ${numero} → "${mensaje}"`);
         await db.execute(
-          "UPDATE ll_envios_whatsapp SET estado = 'enviado', fecha_envio = NOW() WHERE id = ?",
+          "UPDATE ll_envios_whatsapp SET estado = 'simulado', fecha_envio = NOW() WHERE id = ?",
           [row.id]
         );
-
-        console.log(`✅ Mensaje enviado a ${numero}`);
-      } catch (err) {
-        await db.execute(
-          "UPDATE ll_envios_whatsapp SET estado = 'error' WHERE id = ?",
-          [row.id]
-        );
-        console.error(`❌ Error al enviar a ${numero}:`, err.message);
+      } else {
+        try {
+          console.log(`📤 Enviando mensaje a ${chatId}`);
+          await client.sendMessage(chatId, mensaje);
+          await db.execute(
+            "UPDATE ll_envios_whatsapp SET estado = 'enviado', fecha_envio = NOW() WHERE id = ?",
+            [row.id]
+          );
+          console.log(`✅ Mensaje enviado a ${numero}`);
+        } catch (err) {
+          await db.execute(
+            "UPDATE ll_envios_whatsapp SET estado = 'error', fecha_envio = NOW() WHERE id = ?",
+            [row.id]
+          );
+          console.error(`❌ Error al enviar a ${numero}:`, err.message);
+        }
       }
     }
 
     await db.end();
-    console.log('🚀 Envíos finalizados.');
+    console.log('📋 Finalizado.');
     setTimeout(() => process.exit(0), 5000);
 
   } catch (error) {
